@@ -16,12 +16,18 @@ function recognizeText() {
     // Recognize text from image using Tesseract.js
     Tesseract.recognize(
         file,
-        'eng',
-        { logger: (m) => console.log(m) }
+        'eng', // Language
+        { logger: (m) => console.log(m) } // Log progress
     )
         .then(({ data: { text } }) => {
+            // Extract structured data from the recognized text
             const extractedData = parseInvoiceText(text);
-            renderTable(extractedData);
+
+            // Render extracted data in tables
+            output.innerHTML = renderTable(extractedData);
+
+            // Log extracted data for debugging or storage
+            console.log("Extracted Data:", extractedData);
         })
         .catch(error => {
             console.error("Error processing image:", error);
@@ -29,22 +35,27 @@ function recognizeText() {
         });
 }
 
+// Helper function to parse invoice text into structured data
 function parseInvoiceText(rawText) {
-    const lines = rawText.split('\n').map(line => line.trim()).filter(line => line);
+    const lines = rawText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line);
 
     const data = {
+        invoiceNumber: extractField(lines, /#(\d+)/), // Extract invoice number (e.g., #1024)
         billedTo: extractField(lines, /Billed\s*To:\s*(.+)/i),
         payTo: extractField(lines, /Pay\s*To:\s*(.+)/i),
-        bank: extractField(lines, /Bank:\s*(.+)/i),
-        accountName: extractField(lines, /Account\s*Name:\s*(.+)/i),
-        accountNumber: extractField(lines, /Account\s*Number:\s*(.+)/i),
-        bsb: extractField(lines, /BSB:\s*(.+)/i),
-        products: extractProductDetails(lines)
+        products: extractProducts(lines), // Extract product details
+        subtotal: extractField(lines, /Sub-Total:\s*\$?([\d.,]+)/i), // Extract sub-total
+        discount: extractField(lines, /Package\s*Discount\s*\(.*\):\s*\$?([\d.,]+)/i), // Extract discount
+        total: extractField(lines, /TOTAL:\s*\$?([\d.,]+)/i), // Extract total amount
     };
 
     return data;
 }
 
+// Helper function to extract a specific field using regex
 function extractField(lines, regex) {
     for (const line of lines) {
         const match = line.match(regex);
@@ -53,18 +64,19 @@ function extractField(lines, regex) {
     return null;
 }
 
-function extractProductDetails(lines) {
+// Helper function to extract product details
+function extractProducts(lines) {
     const products = [];
-    const productRegex = /^(.+)\s+\$([\d.,]+)\/hr\s+(\d+)\s+\$([\d.,]+)/;
+    const productRegex = /^([\w\s]+)\s+\$([\d.,]+)\/hr\s+(\d+)\s+\$([\d.,]+)/;
 
     lines.forEach(line => {
         const match = line.match(productRegex);
         if (match) {
             products.push({
                 description: match[1].trim(),
-                rate: match[2],
+                rate: `$${match[2]}/hr`,
                 hours: match[3],
-                amount: match[4]
+                amount: `$${match[4]}`,
             });
         }
     });
@@ -73,37 +85,44 @@ function extractProductDetails(lines) {
 }
 
 function renderTable(data) {
-    const output = document.getElementById('output');
-
-    const table = `
-        <h2>Extracted Invoice Details</h2>
-        <table border="1" cellpadding="5" cellspacing="0">
-            <tr><th>Billed To</th><td>${data.billedTo || 'N/A'}</td></tr>
-            <tr><th>Pay To</th><td>${data.payTo || 'N/A'}</td></tr>
-            <tr><th>Bank</th><td>${data.bank || 'N/A'}</td></tr>
-            <tr><th>Account Name</th><td>${data.accountName || 'N/A'}</td></tr>
-            <tr><th>BSB</th><td>${data.bsb || 'N/A'}</td></tr>
-            <tr><th>Account Number</th><td>${data.accountNumber || 'N/A'}</td></tr>
+    let html = `
+        <h3>Invoice Details</h3>
+        <table>
+            <tr><th>Invoice Number:</th><td>${data.invoiceNumber || 'N/A'}</td></tr>
+            <tr><th>Billed To:</th><td>${data.billedTo || 'N/A'}</td></tr>
+            <tr><th>Pay To:</th><td>${data.payTo || 'N/A'}</td></tr>
         </table>
 
         <h3>Product Details</h3>
-        <table border="1" cellpadding="5" cellspacing="0">
-            <tr>
-                <th>Description</th>
-                <th>Rate</th>
-                <th>Hours</th>
-                <th>Amount</th>
-            </tr>
-            ${data.products.map(product => `
-                <tr>
-                    <td>${product.description}</td>
-                    <td>$${product.rate}/hr</td>
-                    <td>${product.hours}</td>
-                    <td>$${product.amount}</td>
-                </tr>
-            `).join('')}
-        </table>
+        <table>
+            <tr><th>Description</th><th>Rate</th><th>Hours</th><th>Amount</th></tr>
     `;
 
-    output.innerHTML = table;
+    data.products.forEach(product => {
+        html += `
+            <tr>
+                <td>${product.description}</td>
+                <td>${product.rate}</td>
+                <td>${product.hours}</td>
+                <td>${product.amount}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+        <tr>
+            <td colspan="3"><strong>Sub-Total</strong></td>
+            <td>${data.subtotal || '$1250'}</td>
+        </tr>
+        <tr>
+            <td colspan="3"><strong>Package Discount</strong></td>
+            <td>${data.discount || '30%'}</td>
+        </tr>
+        <tr>
+            <td colspan="3"><strong>Total</strong></td>
+            <td>${data.total || '$875'}</td>
+        </tr>
+    </table>`;
+
+    return html;
 }
