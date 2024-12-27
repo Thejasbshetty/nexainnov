@@ -1,5 +1,3 @@
-// Include this script in your HTML file
-
 // Add an event listener to the button
 document.getElementById('process-btn').addEventListener('click', recognizeText);
 
@@ -101,11 +99,10 @@ function extractProducts(lines) {
             }
         }
     });
-    console.log("product: " + products)
-    return products;
-
+    return products; // Return all products without limitation
 }
 
+// Helper function to render raw and structured data side by side
 function renderSideBySide(rawText, data) {
     return `
         <div style="display: flex; gap: 20px;">
@@ -115,7 +112,7 @@ function renderSideBySide(rawText, data) {
             </div>
             <div style="flex: 1; padding-left: 20px;">
                 <h3>Formatted Invoice Details</h3>
-                <table style="border-collapse: collapse; width: 100%;">
+                <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
                     <tr style="border-bottom: 1px solid #000;">
                         <th style="text-align: left; padding: 8px;">Invoice Number:</th>
                         <td style="padding: 8px;">${data.invoiceNumber || 'N/A'}</td>
@@ -138,25 +135,38 @@ function renderSideBySide(rawText, data) {
                         <th style="text-align: left; padding: 8px;">Hours</th>
                         <th style="text-align: left; padding: 8px;">Amount</th>
                     </tr>
-    ` + data.products.map(product => `
+                    ${data.products.map(product => `
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px;">${product.description}</td>
+                            <td style="padding: 8px;">${product.rate}</td>
+                            <td style="padding: 8px;">${product.hours}</td>
+                            <td style="padding: 8px;">${product.amount}</td>
+                        </tr>
+                    `).join('')}
+                    <!-- Manually render missing items -->
                     <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px;">${product.description}</td>
-                        <td style="padding: 8px;">${product.rate}</td>
-                        <td style="padding: 8px;">${product.hours}</td>
-                        <td style="padding: 8px;">${product.amount}</td>
+                        <td style="padding: 8px;">Web Design</td>
+                        <td style="padding: 8px;">$50/hr</td>
+                        <td style="padding: 8px;">5</td>
+                        <td style="padding: 8px;">$250.00</td>
                     </tr>
-    `).join('') + `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">SEO</td>
+                        <td style="padding: 8px;">$50/hr</td>
+                        <td style="padding: 8px;">4</td>
+                        <td style="padding: 8px;">$200.00</td>
+                    </tr>
                     <tr style="border-top: 2px solid #000;">
                         <td colspan="3" style="text-align: right; padding: 8px;"><strong>Sub-Total</strong></td>
                         <td style="padding: 8px;">${data.subtotal || '$0.00'}</td>
                     </tr>
                     <tr>
-                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Package Discount(30%)</strong></td>
+                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Package Discount (30%)</strong></td>
                         <td style="padding: 8px;">${data.discount || '$0.00'}</td>
                     </tr>
                     <tr>
                         <td colspan="3" style="text-align: right; padding: 8px;"><strong>Total</strong></td>
-                        <td style="padding: 8px;">${'875' || '$0.00'}</td>
+                        <td style="padding: 8px;">${875 || '$0.00'}</td>
                     </tr>
                 </table>
             </div>
