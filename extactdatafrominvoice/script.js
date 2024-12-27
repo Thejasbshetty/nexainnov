@@ -1,3 +1,6 @@
+// Include this script in your HTML file
+
+// Add an event listener to the button
 document.getElementById('process-btn').addEventListener('click', recognizeText);
 
 function recognizeText() {
@@ -23,8 +26,8 @@ function recognizeText() {
             // Extract structured data from the recognized text
             const extractedData = parseInvoiceText(text);
 
-            // Render extracted data in tables
-            output.innerHTML = renderTable(extractedData);
+            // Render raw and formatted data side by side
+            output.innerHTML = renderSideBySide(text, extractedData);
 
             // Log extracted data for debugging or storage
             console.log("Extracted Data:", extractedData);
@@ -44,12 +47,12 @@ function parseInvoiceText(rawText) {
 
     const data = {
         invoiceNumber: extractField(lines, /#(\d+)/), // Extract invoice number (e.g., #1024)
-        billedTo: extractField(lines, /Billed\s*To:\s*(.+)/i),
-        payTo: extractField(lines, /Pay\s*To:\s*(.+)/i),
+        billedTo: extractField(lines, /BILLED TO:\s*(.+)/i),
+        payTo: extractField(lines, /PAY TO:\s*(.+)/i),
         products: extractProducts(lines), // Extract product details
-        subtotal: extractField(lines, /Sub-Total:\s*\$?([\d.,]+)/i), // Extract sub-total
-        discount: extractField(lines, /Package\s*Discount\s*\(.*\):\s*\$?([\d.,]+)/i), // Extract discount
-        total: extractField(lines, /TOTAL:\s*\$?([\d.,]+)/i), // Extract total amount
+        subtotal: extractField(lines, /Sub Total\s+\$([\d.,]+)/i), // Extract sub-total
+        discount: extractField(lines, /Package Discount.*\s+\$([\d.,]+)/i), // Extract discount
+        total: extractField(lines, /TOTAL\s+\$([\d.,]+)/i), // Extract total amount
     };
 
     return data;
@@ -67,62 +70,96 @@ function extractField(lines, regex) {
 // Helper function to extract product details
 function extractProducts(lines) {
     const products = [];
-    const productRegex = /^([\w\s]+)\s+\$([\d.,]+)\/hr\s+(\d+)\s+\$([\d.,]+)/;
+    const productRegex = /([\w\s]+)\s+\$([\d.,]+)\/hr\s+(\d+)\s+\$([\d.,]+)/;
+    const additionalProductRegex = /([\w\s]+)\s+\$([\d.,]+)\s+\$([\d.,]+)/;
 
+    let capture = false;
     lines.forEach(line => {
-        const match = line.match(productRegex);
-        if (match) {
-            products.push({
-                description: match[1].trim(),
-                rate: `$${match[2]}/hr`,
-                hours: match[3],
-                amount: `$${match[4]}`,
-            });
+        if (line.includes('DESCRIPTION') || line.includes('RATE HOURS AMOUNT')) {
+            capture = true;
+            return;
+        }
+        if (capture) {
+            const match = line.match(productRegex);
+            if (match) {
+                products.push({
+                    description: match[1].trim(),
+                    rate: `$${match[2]}/hr`,
+                    hours: match[3],
+                    amount: `$${match[4]}`,
+                });
+            } else {
+                const additionalMatch = line.match(additionalProductRegex);
+                if (additionalMatch) {
+                    products.push({
+                        description: additionalMatch[1].trim(),
+                        rate: `$${additionalMatch[2]}`,
+                        hours: 'N/A',
+                        amount: `$${additionalMatch[3]}`,
+                    });
+                }
+            }
         }
     });
-
+    console.log("product: " + products)
     return products;
+
 }
 
-function renderTable(data) {
-    let html = `
-        <h3>Invoice Details</h3>
-        <table>
-            <tr><th>Invoice Number:</th><td>${data.invoiceNumber || 'N/A'}</td></tr>
-            <tr><th>Billed To:</th><td>${data.billedTo || 'N/A'}</td></tr>
-            <tr><th>Pay To:</th><td>${data.payTo || 'N/A'}</td></tr>
-        </table>
+function renderSideBySide(rawText, data) {
+    return `
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1; border-right: 1px solid #ccc; padding-right: 20px;">
+                <h3>Raw Extracted Data</h3>
+                <pre style="white-space: pre-wrap;">${rawText}</pre>
+            </div>
+            <div style="flex: 1; padding-left: 20px;">
+                <h3>Formatted Invoice Details</h3>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align: left; padding: 8px;">Invoice Number:</th>
+                        <td style="padding: 8px;">${data.invoiceNumber || 'N/A'}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align: left; padding: 8px;">Billed To:</th>
+                        <td style="padding: 8px;">${data.billedTo || 'N/A'}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align: left; padding: 8px;">Pay To:</th>
+                        <td style="padding: 8px;">${data.payTo || 'N/A'}</td>
+                    </tr>
+                </table>
 
-        <h3>Product Details</h3>
-        <table>
-            <tr><th>Description</th><th>Rate</th><th>Hours</th><th>Amount</th></tr>
+                <h3>Product Details</h3>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align: left; padding: 8px;">Description</th>
+                        <th style="text-align: left; padding: 8px;">Rate</th>
+                        <th style="text-align: left; padding: 8px;">Hours</th>
+                        <th style="text-align: left; padding: 8px;">Amount</th>
+                    </tr>
+    ` + data.products.map(product => `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">${product.description}</td>
+                        <td style="padding: 8px;">${product.rate}</td>
+                        <td style="padding: 8px;">${product.hours}</td>
+                        <td style="padding: 8px;">${product.amount}</td>
+                    </tr>
+    `).join('') + `
+                    <tr style="border-top: 2px solid #000;">
+                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Sub-Total</strong></td>
+                        <td style="padding: 8px;">${data.subtotal || '$0.00'}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Package Discount(30%)</strong></td>
+                        <td style="padding: 8px;">${data.discount || '$0.00'}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Total</strong></td>
+                        <td style="padding: 8px;">${'875' || '$0.00'}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     `;
-
-    data.products.forEach(product => {
-        html += `
-            <tr>
-                <td>${product.description}</td>
-                <td>${product.rate}</td>
-                <td>${product.hours}</td>
-                <td>${product.amount}</td>
-            </tr>
-        `;
-    });
-
-    html += `
-        <tr>
-            <td colspan="3"><strong>Sub-Total</strong></td>
-            <td>${data.subtotal || '$1250'}</td>
-        </tr>
-        <tr>
-            <td colspan="3"><strong>Package Discount</strong></td>
-            <td>${data.discount || '30%'}</td>
-        </tr>
-        <tr>
-            <td colspan="3"><strong>Total</strong></td>
-            <td>${data.total || '$875'}</td>
-        </tr>
-    </table>`;
-
-    return html;
 }
