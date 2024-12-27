@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Data Extraction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Invoice Data Extraction</h1>
+        <p class="description">Upload an invoice image to extract details</p>
+        
+        <div class="input-container">
+            <input type="file" id="image" accept="image/*" class="file-input" />
+            <button id="process-btn" class="btn">Extract Invoice</button>
+        </div>
+
+        <div id="output" class="output">
+            <p>Extracted data will appear here...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
