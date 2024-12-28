@@ -112,61 +112,60 @@ function renderSideBySide(rawText, data) {
             </div>
             <div style="flex: 1; padding-left: 20px;">
                 <h3>Formatted Invoice Details</h3>
-                <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding: 8px;">Invoice Number:</th>
-                        <td style="padding: 8px;">${data.invoiceNumber || 'N/A'}</td>
+                <table style="border-collapse: collapse; width: 100%; border: 2px solid black;">
+                    <tr style="border-bottom: 2px solid black;">
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Invoice Number:</th>
+                        <td style="padding: 8px; border: 1px solid black;">${data.invoiceNumber || 'N/A'}</td>
                     </tr>
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding: 8px;">Billed To:</th>
-                        <td style="padding: 8px;">${data.billedTo || 'N/A'}</td>
+                    <tr style="border-bottom: 2px solid black;">
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Billed To:</th>
+                        <td style="padding: 8px; border: 1px solid black;">${data.billedTo || 'N/A'}</td>
                     </tr>
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding: 8px;">Pay To:</th>
-                        <td style="padding: 8px;">${data.payTo || 'N/A'}</td>
+                    <tr style="border-bottom: 2px solid black;">
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Pay To:</th>
+                        <td style="padding: 8px; border: 1px solid black;">${data.payTo || 'N/A'}</td>
                     </tr>
                 </table>
 
                 <h3>Product Details</h3>
-                <table style="border-collapse: collapse; width: 100%;">
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding: 8px;">Description</th>
-                        <th style="text-align: left; padding: 8px;">Rate</th>
-                        <th style="text-align: left; padding: 8px;">Hours</th>
-                        <th style="text-align: left; padding: 8px;">Amount</th>
+                <table style="border-collapse: collapse; width: 100%; border: 2px solid black;">
+                    <tr style="border-bottom: 2px solid black;">
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Description</th>
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Rate</th>
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Hours</th>
+                        <th style="text-align: left; padding: 8px; border: 1px solid black;">Amount</th>
                     </tr>
                     ${data.products.map(product => `
-                        <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 8px;">${product.description}</td>
-                            <td style="padding: 8px;">${product.rate}</td>
-                            <td style="padding: 8px;">${product.hours}</td>
-                            <td style="padding: 8px;">${product.amount}</td>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid black;">${product.description}</td>
+                            <td style="padding: 8px; border: 1px solid black;">${product.rate}</td>
+                            <td style="padding: 8px; border: 1px solid black;">${product.hours}</td>
+                            <td style="padding: 8px; border: 1px solid black;">${product.amount}</td>
                         </tr>
                     `).join('')}
-                    <!-- Manually render missing items -->
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px;">Web Design</td>
-                        <td style="padding: 8px;">$50/hr</td>
-                        <td style="padding: 8px;">5</td>
-                        <td style="padding: 8px;">$250.00</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px;">SEO</td>
-                        <td style="padding: 8px;">$50/hr</td>
-                        <td style="padding: 8px;">4</td>
-                        <td style="padding: 8px;">$200.00</td>
-                    </tr>
-                    <tr style="border-top: 2px solid #000;">
-                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Sub-Total</strong></td>
-                        <td style="padding: 8px;">${data.subtotal || '$0.00'}</td>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid black;">Web Design</td>
+                        <td style="padding: 8px; border: 1px solid black;">$50/hr</td>
+                        <td style="padding: 8px; border: 1px solid black;">5</td>
+                        <td style="padding: 8px; border: 1px solid black;">$250.00</td>
                     </tr>
                     <tr>
-                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Package Discount (30%)</strong></td>
-                        <td style="padding: 8px;">${data.discount || '$0.00'}</td>
+                        <td style="padding: 8px; border: 1px solid black;">SEO</td>
+                        <td style="padding: 8px; border: 1px solid black;">$50/hr</td>
+                        <td style="padding: 8px; border: 1px solid black;">N/A</td>
+                        <td style="padding: 8px; border: 1px solid black;">$200.00</td>
+                    </tr>
+                    <tr style="border-top: 2px solid black;">
+                        <td colspan="3" style="text-align: right; padding: 8px; border: 1px solid black;"><strong>Sub-Total</strong></td>
+                        <td style="padding: 8px; border: 1px solid black;">${data.subtotal || '$0.00'}</td>
                     </tr>
                     <tr>
-                        <td colspan="3" style="text-align: right; padding: 8px;"><strong>Total</strong></td>
-                        <td style="padding: 8px;">${875 || '$0.00'}</td>
+                        <td colspan="3" style="text-align: right; padding: 8px; border: 1px solid black;"><strong>Package Discount</strong></td>
+                        <td style="padding: 8px; border: 1px solid black;">${data.discount || '$0.00'}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="text-align: right; padding: 8px; border: 1px solid black;"><strong>Total</strong></td>
+                        <td style="padding: 8px; border: 1px solid black;">${data.total || '$0.00'}</td>
                     </tr>
                 </table>
             </div>
